@@ -13,6 +13,9 @@ from scipy.linalg import expm
 from scipy.sparse.linalg import cg
 from scipy.sparse.linalg import LinearOperator
 
+from scipy.optimize import fixed_point
+from control import dlyap  # TODO : Remove dylap
+
 
 def brute_force_random_walk_kernel(X, Y, lamda, p=None, kernel_type="exponential"):
 
@@ -148,9 +151,82 @@ def spectral_decomposition_random_walk(X, Y, lamda, p=None, kernel_type="exponen
     return ff.dot(S).dot(ff.T)
 
 
-def sylvester_random_walk():
-    pass
+# for some reason this is causing my colab to crash.
+# TODO : figure out why that is the case
+# If I can not figure it out, rewrite the equation so that it can be solved by scipy solver for Sylvester equation.
 
 
-def fixed_point_random_walk():
-    pass
+def sylvester_random_walk(X, Y, lamda):
+    """
+    Sylvester equation Methods (lyapunov)
+    O(n^3)
+    for graph with no labels only : else implement "COMPUTATION OF THE CANONICAL DECOMPOSITION BYMEANS OF A SIMULTANEOUS GENERALIZED SCHURDECOMPOSITION∗"
+    with https://docs.scipy.org/doc/scipy-0.13.0/reference/generated/scipy.linalg.qz.html
+    """
+    # https://python-control.readthedocs.io/en/0.8.0/generated/control.dlyap.html
+
+    n1 = X.shape[0]
+    n2 = Y.shape[0]
+    # in case the matrix is empty i add a diagonal, works great
+    A1 = (X + X.T) / 2 + np.eye(n1) * 1e1
+    A2 = (Y + Y.T) / 2 + np.eye(n2) * 1e1
+    n = n1 * n2
+    px = np.ones((n, 1)) / n  # np.ones((n,1))
+    qx = np.ones((n, 1)) / n  # np.ones((n,1))
+    M = dlyap(A=lamda * X, Q=Y, C=px.reshape((n1, n2)))
+    return -1 * (qx.T @ M.reshape((-1, 1)))
+
+
+def fixed_point_random_walk(X, Y, lamda, maxiter=1500):
+
+    """This is technically slow as we are materializing the entire tensor product"""
+    Wx = np.kron(A1, A2)
+    n = Wx.shape[0]
+    px = np.ones((n, 1)) / n
+    qx = np.ones((n, 1)) / n
+    # diagonaliser
+    Wx = (Wx + Wx.T) / 2
+
+    if lamda >= 1 / abs(eigh(Wx, eigvals_only=True, eigvals=(n - 1, n - 1))[0]):
+        print("Cannot converge. Choose a smaller value of lamda")
+        raise ValueError()
+
+    def func(x, px, lamda, Wx):
+        return px + (lamda * Wx) @ x
+
+    x = fixed_point(func, px, args=(px, lamda, Wx), maxiter=maxiter)
+
+    k = np.real(qx.T @ x)
+    return k
+
+
+def fixed_point_kernel_fast(A1, A2, lamda, maxiter=1500):
+    """Faster variant of the above. Does not explicitly materialize the kronecker product
+    For this algorithm to work properly, A1, A2 needs to be symmetric
+    """
+    xs, ys = A1.shape[0], A2.shape[0]
+    mn = xs * ys
+    px = np.ones((mn)) / mn
+    qx = np.ones((mn, 1)) / mn
+
+    # check for convergence before running the algorithm
+    eig1 = eigh(A1, eigvals_only=True, eigvals=(xs - 1, xs - 1))[0]
+    eig2 = eigh(A2, eigvals_only=True, eigvals=(ys - 1, ys - 1))[0]
+    if lamda >= 1 / abs(eig1 * eig2):
+        print("Cannot converge. Choose a smaller value of lamda")
+        raise ValueError()
+
+    def lsf(x, lamda):
+        xm = x.reshape((xs, ys), order="F")
+        y = np.reshape(multi_dot((A1, xm, A2)), (mn,), order="F")
+        return lamda * y
+
+    A = LinearOperator((mn, mn), matvec=lambda x: lsf(x, lamda))
+
+    def func(x, px, A):
+        return px + A.matvec(x)
+
+    x = fixed_point(func, np.zeros(mn), args=(px, A), maxiter=maxiter)
+
+    k = np.real(qx.T @ x)
+    return k

@@ -1,0 +1,7 @@
+numpy
+scipy
+networkx
+joblib
+grakel
+control
+graphkit-learn
