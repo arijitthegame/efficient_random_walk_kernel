@@ -9,7 +9,7 @@ from numpy import ComplexWarning
 from numpy.linalg import inv
 from numpy.linalg import eig
 from numpy.linalg import multi_dot
-from scipy.linalg import expm
+from scipy.linalg import expm, eigh
 from scipy.sparse.linalg import cg
 from scipy.sparse.linalg import LinearOperator
 
