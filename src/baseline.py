@@ -180,7 +180,7 @@ def sylvester_random_walk(X, Y, lamda):
 def fixed_point_random_walk(X, Y, lamda, maxiter=1500):
 
     """This is technically slow as we are materializing the entire tensor product"""
-    Wx = np.kron(A1, A2)
+    Wx = np.kron(X, Y)
     n = Wx.shape[0]
     px = np.ones((n, 1)) / n
     qx = np.ones((n, 1)) / n
@@ -200,25 +200,25 @@ def fixed_point_random_walk(X, Y, lamda, maxiter=1500):
     return k
 
 
-def fixed_point_kernel_fast(A1, A2, lamda, maxiter=1500):
+def fixed_point_kernel_fast(X, Y, lamda, maxiter=1500):
     """Faster variant of the above. Does not explicitly materialize the kronecker product
     For this algorithm to work properly, A1, A2 needs to be symmetric
     """
-    xs, ys = A1.shape[0], A2.shape[0]
+    xs, ys = X.shape[0], Y.shape[0]
     mn = xs * ys
     px = np.ones((mn)) / mn
     qx = np.ones((mn, 1)) / mn
 
     # check for convergence before running the algorithm
-    eig1 = eigh(A1, eigvals_only=True, eigvals=(xs - 1, xs - 1))[0]
-    eig2 = eigh(A2, eigvals_only=True, eigvals=(ys - 1, ys - 1))[0]
+    eig1 = eigh(X, eigvals_only=True, eigvals=(xs - 1, xs - 1))[0]
+    eig2 = eigh(Y, eigvals_only=True, eigvals=(ys - 1, ys - 1))[0]
     if lamda >= 1 / abs(eig1 * eig2):
         print("Cannot converge. Choose a smaller value of lamda")
         raise ValueError()
 
     def lsf(x, lamda):
         xm = x.reshape((xs, ys), order="F")
-        y = np.reshape(multi_dot((A1, xm, A2)), (mn,), order="F")
+        y = np.reshape(multi_dot((X, xm, Y)), (mn,), order="F")
         return lamda * y
 
     A = LinearOperator((mn, mn), matvec=lambda x: lsf(x, lamda))
