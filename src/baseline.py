@@ -21,7 +21,7 @@ def brute_force_random_walk_kernel(X, Y, lamda, p=None, kernel_type="exponential
 
     if p is not None:
         if type(p) is int and p > 0:
-            if kernel_type == "geometric":
+            if kernel_type == "exponential":
                 mu_ = [1]
                 fact = 1
                 power = 1
@@ -29,12 +29,14 @@ def brute_force_random_walk_kernel(X, Y, lamda, p=None, kernel_type="exponential
                     fact *= k
                     power *= lamda
                     mu_.append(fact / power)
-            else:
+            elif kernel_type == "geometric":
                 mu_ = [1]
                 power = 1
                 for k in range(1, p + 1):
                     power *= lamda
                     mu_.append(power)
+            else:
+                raise ValueError("Other powers are not implemented")
         else:
             raise TypeError(
                 "p must be a positive integer bigger than " "zero or nonetype"
@@ -112,7 +114,7 @@ def spectral_decomposition_random_walk(X, Y, lamda, p=None, kernel_type="exponen
 
     if p is not None:
         if type(p) is int and p > 0:
-            if kernel_type == "geometric":
+            if kernel_type == "exponential":
                 mu_ = [1]
                 fact = 1
                 power = 1
@@ -120,12 +122,14 @@ def spectral_decomposition_random_walk(X, Y, lamda, p=None, kernel_type="exponen
                     fact *= k
                     power *= lamda
                     mu_.append(fact / power)
-            else:
+            elif kernel_type == "geometric":
                 mu_ = [1]
                 power = 1
                 for k in range(1, p + 1):
                     power *= lamda
                     mu_.append(power)
+            else:
+                raise ValueError("Other power series are not yet implemented.")
         else:
             raise TypeError(
                 "p must be a positive integer bigger than " "zero or nonetype"
