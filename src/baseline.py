@@ -28,7 +28,7 @@ def brute_force_random_walk_kernel(X, Y, lamda, p=None, kernel_type="exponential
                 for k in range(1, p + 1):
                     fact *= k
                     power *= lamda
-                    mu_.append(fact / power)
+                    mu_.append(power / fact)
             elif kernel_type == "geometric":
                 mu_ = [1]
                 power = 1
@@ -121,7 +121,7 @@ def spectral_decomposition_random_walk(X, Y, lamda, p=None, kernel_type="exponen
                 for k in range(1, p + 1):
                     fact *= k
                     power *= lamda
-                    mu_.append(fact / power)
+                    mu_.append(power / fact)
             elif kernel_type == "geometric":
                 mu_ = [1]
                 power = 1
@@ -148,7 +148,7 @@ def spectral_decomposition_random_walk(X, Y, lamda, p=None, kernel_type="exponen
         for k in mu_[1:]:
             D *= Dij
             S += k * D
-            S = np.diagflat(S)
+        S = np.diagflat(S)
     else:
         # Exponential
         S = np.diagflat(np.exp(lamda * Dij))
