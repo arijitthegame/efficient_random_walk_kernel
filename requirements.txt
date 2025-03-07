@@ -5,3 +5,5 @@ joblib
 grakel
 control
 graphkit-learn
+torch
+torch_geometric
