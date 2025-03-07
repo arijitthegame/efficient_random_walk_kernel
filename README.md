@@ -2,6 +2,8 @@
 
 General Random Walk kernels (RWK) take O($N^6$) time complexity and special instances of this kernel take O($N^3$) time. In this work we present graph voyagers (GVoys): the first O($N$) algorithm for the unbiased approximation of general RWKs, for labelled and unlabelled graphs. GVoys first use the graph random features (Choromanski 2023, Reid et al. 2024) to reduce the time complexity to O($N^2$) and then simulate dependent walks on graphs $G_1$ and $G_2$ by introducing extra random variables to sample walks on the product graph but without storing it in memory, further reducing time complexity as well as storage complexity  (see Figure below).
 
+This repo is the official implementation of This repository accompanies the paper ["Scalable Neural Network Kernels"](https://openreview.net/forum?id=NF1WK6BTRZ)
+
 
 <p align="center">
 <img src="https://github.com/arijitthegame/efficient_random_walk_kernel/blob/main/sim-double-walk.jpg"  width="800px"/>
